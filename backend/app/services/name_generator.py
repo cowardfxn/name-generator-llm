@@ -81,6 +81,9 @@ class NameGeneratorService:
             ", ".join(request.avoidCharacters) if request.avoidCharacters else "无"
         )
         avoid_sounds = ", ".join(request.avoidSounds) if request.avoidSounds else "无"
+        disliked_names = (
+            ", ".join(request.dislikedNames) if request.dislikedNames else "无"
+        )
 
         prompt = f"""
 请根据以下要求生成{request.count}个中文名字，并以JSON格式返回：
@@ -98,6 +101,7 @@ class NameGeneratorService:
 - 姓名要遵循中国传统起名习惯，音韵和谐
 - 名字要有美感和寓意，避免生僻字或难写的字
 - 每个名字都要提供详细的出处和解释
+- 用户不喜欢这些名字，请避免生成类似的名字：{disliked_names}
 
 请以如下JSON格式返回结果：
 {{

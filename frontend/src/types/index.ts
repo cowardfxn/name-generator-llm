@@ -14,4 +14,5 @@ export interface NameGeneratorParams {
   avoidSounds?: string[];
   count: number;
   nameLength?: "single" | "double" | "any";
+  dislikedNames?: string[]; // 添加不喜欢的名字列表
 }

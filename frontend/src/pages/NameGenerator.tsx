@@ -15,15 +15,17 @@ import {
   theme,
   Layout,
   Switch,
+  Tooltip,
 } from "antd";
 import {
   UploadOutlined,
   CopyOutlined,
   SunOutlined,
   MoonOutlined,
+  DislikeOutlined,
 } from "@ant-design/icons";
 import type { NameGeneratorParams, NameResult } from "../types";
-import axios from "axios";
+import axios from "react";
 import { useEffect } from "react";
 
 const { Option } = Select;
@@ -63,6 +65,7 @@ const NameGenerator: React.FC<NameGeneratorProps> = ({
   const [loading, setLoading] = useState(false);
   const [nameResults, setNameResults] = useState<NameResult[]>([]);
   const [eventSource, setEventSource] = useState<EventSource | null>(null);
+  const [dislikedNames, setDislikedNames] = useState<Set<string>>(new Set());
   const { token } = useToken();
 
   // Cleanup event source on unmount
@@ -94,6 +97,11 @@ const NameGenerator: React.FC<NameGeneratorProps> = ({
     }
   };
 
+  const handleDislike = (name: string) => {
+    setDislikedNames((prev) => new Set([...prev, name]));
+    message.success("已将该名字标记为不喜欢");
+  };
+
   const onFinish = async (formValues: any) => {
     try {
       setLoading(true);
@@ -114,6 +122,7 @@ const NameGenerator: React.FC<NameGeneratorProps> = ({
           formValues.culturalSource?.filter((c: string) => c !== "ALL") || [],
         count: formValues.count || 3,
         nameLength: formValues.nameLength || "any",
+        dislikedNames: Array.from(dislikedNames), // 添加不喜欢的名字列表
       };
 
       // Start SSE connection
@@ -451,27 +460,37 @@ const NameGenerator: React.FC<NameGeneratorProps> = ({
                             borderColor: token.colorBorderSecondary,
                           }}
                           extra={
-                            <Button
-                              icon={<CopyOutlined />}
-                              type="text"
-                              onClick={() =>
-                                copyToClipboard(
-                                  `名字：${result.name}\n性别：${
-                                    result.gender === "male"
-                                      ? "男"
-                                      : result.gender === "female"
-                                      ? "女"
-                                      : "中性"
-                                  }\n寓意：${result.meaning.join(
-                                    "、"
-                                  )}\n出处：${result.source}\n释义：${
-                                    result.explanation
-                                  }`
-                                )
-                              }
-                            >
-                              复制
-                            </Button>
+                            <Space>
+                              <Tooltip title="标记为不喜欢">
+                                <Button
+                                  icon={<DislikeOutlined />}
+                                  type="text"
+                                  onClick={() => handleDislike(result.name)}
+                                  disabled={dislikedNames.has(result.name)}
+                                />
+                              </Tooltip>
+                              <Button
+                                icon={<CopyOutlined />}
+                                type="text"
+                                onClick={() =>
+                                  copyToClipboard(
+                                    `名字：${result.name}\n性别：${
+                                      result.gender === "male"
+                                        ? "男"
+                                        : result.gender === "female"
+                                        ? "女"
+                                        : "中性"
+                                    }\n寓意：${result.meaning.join(
+                                      "、"
+                                    )}\n出处：${result.source}\n释义：${
+                                      result.explanation
+                                    }`
+                                  )
+                                }
+                              >
+                                复制
+                              </Button>
+                            </Space>
                           }
                         >
                           <p

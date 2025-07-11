@@ -10,6 +10,7 @@ class NameGeneratorRequest(BaseModel):
     avoidSounds: Optional[List[str]] = None
     count: int = 3  # Default value of 3 if not specified
     nameLength: Optional[Literal["single", "double", "any"]] = "any"
+    dislikedNames: Optional[List[str]] = None  # 不喜欢的名字列表
 
 
 class GeneratedName(BaseModel):

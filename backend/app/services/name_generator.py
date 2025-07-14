@@ -5,6 +5,7 @@ from typing import List
 from openai import OpenAI
 from dotenv import load_dotenv
 from app.schemas.schemas import NameGeneratorRequest, GeneratedName
+from app.services.weaviate_service import WeaviateService
 
 # Load environment variables
 load_dotenv()
@@ -14,6 +15,7 @@ class NameGeneratorService:
     def __init__(self):
         base_url = os.getenv("LLM_BASE_URL", "https://api.openai.com/v1")
         api_key = os.getenv("LLM_API_KEY")
+        self.weaviate_service = WeaviateService()
 
         # Configure the OpenAI client based on the API being used
         if "openrouter.ai" in base_url:
@@ -85,8 +87,16 @@ class NameGeneratorService:
             ", ".join(request.dislikedNames) if request.dislikedNames else "无"
         )
 
+        # 构建查询
+        query = f"{' '.join(request.meanings)} {' '.join(request.culturalSource)}"
+        similar_docs = self.weaviate_service.search_similar(query, limit=3)
+        reference_text = "\n".join(similar_docs) if similar_docs else ""
+
         prompt = f"""
 请根据以下要求生成{request.count}个中文名字，并以JSON格式返回：
+
+相关参考资料：
+{reference_text}
 
 命名要求：
 1. 性别：{gender_text}

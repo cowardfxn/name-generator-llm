@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      # - LLM_BASE_URL=${LLM_BASE_URL}
+      # - LLM_API_KEY=${LLM_API_KEY}
+      # - LLM_MODEL=${LLM_MODEL}
+      - WEAVIATE_URL=http://weaviate:8080
+      - EMBEDDING_MODEL=Qwen/Qwen3-Embedding-0.6B-GGUF
+      - RERANKER_MODEL=Qwen/Qwen3-Reranker-0.6B
+    volumes:
+      - ./backend:/app
+      - model_cache:/root/.cache/huggingface
+    depends_on:
+      - weaviate
+
+  weaviate:
+    image: semitechnologies/weaviate:1.24.1
+    ports:
+      - "8080:8080"
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: 'true'
+      PERSISTENCE_DATA_PATH: '/var/lib/weaviate'
+      DEFAULT_VECTORIZER_MODULE: 'none'
+      CLUSTER_HOSTNAME: 'node1'
+    volumes:
+      - weaviate_data:/var/lib/weaviate
+
+volumes:
+  weaviate_data:
+  model_cache:
